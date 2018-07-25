@@ -1,0 +1,30 @@
+Output format:
+   
+   Bird: 
+   	 for unsteady flow sampling, if continuing with a new sample and outer boundary is stationary
+	 ISF = 0, IRUN = 2, IVB = 0
+	 code prompts distribution sampling
+	 Asks for output intervals, ISET
+	 
+	 for unsteady flow sampling, code calls SAMPLE_FLOW if FTIME > TSAMP
+
+	 if FTIME > TOUT, code calls OUTPUT_RESULTS and if IDSISTS > 1 OUTPUT_DISTRIBUTIONS
+
+	 INITIALISE SAMPLES - sets counting variables to 0
+	 INITIALISE DISTRIBUTIONS - sets distribution variables to 0 (assumes homogeneous)
+
+	 SAMPLE FLOW - 
+	 	sums vibrational energy
+		loops over all particles and calculates n,u,v,w,u^2,v^2,w^2,Erot,Evib
+
+	 OUTPUT RESULTS - 
+	 	calculates flowfield properties
+		starts at reflected/incident molecules boundaries and then loops over all cells
+		creates sums from sampled data
+		calculates VARSP and VAR from sums and other sampled data
+		for unsteady flow sampling, INITIALISE_SAMPLES is called inside the subroutine
+		profile data is output to PROFILE.DAT
+
+	 OUTPUT DISTRIBUTIONS - 
+	 	outputs sampled distribution and equilibrium distribution calculated from temperature
+		TRANSDIST.DAT, ROTDIST.DAT, VIBDIST.DAT

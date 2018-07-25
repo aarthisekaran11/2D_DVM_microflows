@@ -1,0 +1,384 @@
+#  -*-getpot-*- 
+#
+#==========================================================
+#                   REFERENCE DATA
+#==========================================================
+[reference]
+
+#----------------------------------------------------------
+# n_ref, T_ref - reference number density, temperature
+#----------------------------------------------------------
+n_ref = 1e20 # [molecules/m^3]
+T_ref = 300  # [K]
+
+#----------------------------------------------------------
+# species_ref - reference species
+#----------------------------------------------------------
+species_ref = 'Ar'
+
+
+#==========================================================
+#                      SPECIES DATA
+#==========================================================
+[species]
+
+#----------------------------------------------------------
+# Number of species in mixture
+#----------------------------------------------------------
+num_species = 1
+
+#----------------------------------------------------------
+# Species in mixture
+#----------------------------------------------------------
+species_codes = 'Ar'
+
+#----------------------------------------------------------
+# Rotational and Vibrational levels modeled
+#----------------------------------------------------------
+num_rot_levels = '0'
+num_vib_levels = '0'
+
+#==========================================================
+#                  CROSS SECTION MODEL
+#==========================================================
+[csection_model]
+
+#----------------------------------------------------------
+# Cross Section Method Flag
+#        1 = Hard sphere
+#	 2 = Pseudo-Maxwell
+#	 3 = VHS
+#	 4 = VSS
+#----------------------------------------------------------
+csection_method = 2
+
+#----------------------------------------------------------
+# Cross section coefficient
+#        1 = Clarke
+#	 2 = Bird
+#----------------------------------------------------------
+csection_coeff = 1
+
+
+#==========================================================
+#             PHYSICAL GRID DEFINITIONS
+#==========================================================
+[phy_grid]
+
+#----------------------------------------------------------
+# Scaled distance between grid points
+#----------------------------------------------------------
+delta_x = '1.0d0'
+
+#----------------------------------------------------------
+# Number of physical grid points (in x-direction)
+#----------------------------------------------------------
+nspace = '1'
+
+#----------------------------------------------------------
+# Number of grid zones
+#   - this value is the length of the 'reference' vector
+#   TODO: find out if it is possible to read in a
+#   TODO: vector of undetermined length
+#----------------------------------------------------------
+num_zones = '1'
+
+#----------------------------------------------------------
+# Reference values to grid types
+#   - grid type for sets of consecutive grids
+#   - for example: nspace = 6, grid types = 1 1 2 1 3 3
+#     would have a reference of '1 2 1 3'
+#----------------------------------------------------------
+reference = '1'
+
+#----------------------------------------------------------
+# start values of grid types
+#   - starting location of each grid type in reference
+#     array
+#   - for example: in above data, start_values = '1 3 4 5'
+#----------------------------------------------------------
+start_values = '1'
+
+
+#==========================================================
+#               VELOCITY GRID DEFINITIONS
+#==========================================================
+[vel_grid]
+
+#----------------------------------------------------------
+# Velocity grid setup
+#        0 = read grid from file
+#	 1 = uniform grid
+#----------------------------------------------------------
+x_vel_grid_type = '1'
+y_vel_grid_type = '1'
+z_vel_grid_type = '1'
+
+#----------------------------------------------------------
+# Number of grid points
+#----------------------------------------------------------
+num_points_x = '11 11'
+num_points_y = '11 11'
+num_points_z = '11 11'
+
+#----------------------------------------------------------
+# Velocity domain
+#----------------------------------------------------------
+xv_min = '-3.5d0 -3.5d0'
+xv_max = '3.5d0 3.5d0'
+
+yv_min = '-3.5d0 -3.5d0'
+yv_max = '3.5d0 3.5d0'
+
+zv_min = '-3.5d0 -3.5d0'
+zv_max = '3.5d0 3.5d0'
+
+
+#==========================================================
+#               TIME-STEPPING PARAMETERS
+#==========================================================
+[time_stepping]
+
+#----------------------------------------------------------
+# Scaled time step
+#----------------------------------------------------------
+deltat = 0.1d0
+
+#----------------------------------------------------------
+# Number of time steps
+#----------------------------------------------------------
+ntstep = 100
+
+#==========================================================
+#             Boundary Conditions 
+#==========================================================
+[boundary]
+
+#----------------------------------------------------------
+# Domain initialization
+#        1 = Initialize Domain w/ Left Wall Props
+#        2 = Initialize Domain w/ Right Wall Props
+#        3 = Initialize half w/ Right and half w/ Left
+#	 4 = Rankine-Hugoniot half and half
+#----------------------------------------------------------
+InitC = '2'
+
+#----------------------------------------------------------
+# Initial half-shock thickness (InitC = 4)
+#    - set thickness of initial shock in spatial units
+#----------------------------------------------------------
+shock_thickness = '1'
+
+#----------------------------------------------------------
+# Distribution used in domain initialization
+#        1 = Maxwellian DF
+#        2 = BKW distribution
+#----------------------------------------------------------
+InitDF = '2'
+
+#----------------------------------------------------------
+# Energy distribution used in domain initialization
+#        1 = Boltzmann DF
+#----------------------------------------------------------
+InitRot = '1'
+InitVib = '1'
+
+#----------------------------------------------------------
+# Left wall properties
+#    - density, x-velocity, temperatures
+#----------------------------------------------------------
+dens_LW     = '1.0d0'
+x_vel_LW    = '0.0d0'
+tr_temp_LW  = '1.0d0'
+rot_temp_LW = '0.0d0'
+vib_temp_LW = '0.0d0'
+
+#----------------------------------------------------------
+# Left wall boundary condition 
+#        1 = Specular Wall
+#        2 = In/out flow (Specified wall props)
+#        3 = Zero grad (e.g. phi(x=0,vel)=phi(x=dx,vel)
+#----------------------------------------------------------
+LWallBC = '2'
+
+#----------------------------------------------------------
+# Right wall properties
+#    - density, x-velocity, temperatures
+#----------------------------------------------------------
+dens_RW     = '0.0d0'
+x_vel_RW    = '0.0d0'
+tr_temp_RW  = '0.0d0'
+rot_temp_RW = '0.0d0'
+vib_temp_RW = '0.0d0'
+
+#----------------------------------------------------------
+# Right wall boundary condition 
+#        1 = Specular Wall
+#        2 = In/out flow (Specified wall props)
+#        3 = Zero grad (e.g. phi(x=0,vel)=phi(x=dx,vel)
+#----------------------------------------------------------
+RWallBC = '2'
+
+
+#==========================================================
+#                 COLLISION PROPERTIES
+#==========================================================
+[collision]
+
+#----------------------------------------------------------
+# Type of Collision routine
+#        0 = No Collisions
+#        1 = N^2 method for Collisions (no ie)
+#        2 = Full Monte Carlo
+#        3 = Variance Reduction Method
+#----------------------------------------------------------
+iColl = 3
+
+#----------------------------------------------------------
+# If iColl = 3, set the minimum number of collisions 
+# needed before the equilibrium df is recalculated
+#----------------------------------------------------------
+recalc_equil_limit = 1
+
+#----------------------------------------------------------
+# Number of replenishing pairs
+#----------------------------------------------------------
+NRepl = 4
+
+#----------------------------------------------------------
+# Desired noise in eq. distribution function if FMC was 
+# used (applicable to iColl = 2, 3)
+#      | A-A  A-B  A-C |
+#      | B-A  B-B  B-C |
+#      | C-A  C-B  C-C |
+#----------------------------------------------------------
+ColnRMS = '0.004d0 0.004d0
+           0.004d0 0.004d0'
+
+
+#==========================================================
+#          Screen Output Information
+#==========================================================
+[screen_out]
+
+#----------------------------------------------------------
+# Information written to screen
+#        0 = no screen output
+#	 1 = just headers
+#	 2 = properties
+#----------------------------------------------------------
+verbosity = 2
+
+#----------------------------------------------------------
+# Frequency information is written to screen
+#----------------------------------------------------------
+display_freq = 1
+
+#----------------------------------------------------------
+# Spatial location of screen output (default = nspace)
+#----------------------------------------------------------
+screen_output_loc = 1
+
+
+#==========================================================
+#          Visualization Information
+#==========================================================
+[vis]
+
+#----------------------------------------------------------
+# All output is in tecplot format. Post-processing is 
+#     required for visualization in other formats
+#----------------------------------------------------------
+
+enable_vel_df_vis     = 0
+enable_rot_df_vis     = 0
+enable_vib_df_vis     = 0
+enable_rot_levels_vis = 0
+enable_vib_levels_vis = 0
+enable_properties_vis = 1
+
+df_vis_filename         = dist_func
+rot_levels_vis_filename = rot_levels
+vib_levels_vis_filename = vib_levels
+properties_vis_filename = bkw_test_properties
+
+df_vis_dump_freq         = 1
+rot_levels_vis_dump_freq = 1
+vib_levels_vis_dump_freq = 1
+properties_vis_dump_freq = 1
+
+#----------------------------------------------------------
+# Number of locations and locations to print df and levels
+#----------------------------------------------------------
+number_df_locations = 1
+df_locations = '1'
+
+#----------------------------------------------------------
+# Number of dimensions to output for dist function
+# 	 1 = x(:), y=0,  z=0
+#	 2 = x(:), y(:), z=0
+#	 3 = x(:), y(:), z(:)
+#----------------------------------------------------------
+df_output_dimension = 2
+
+#----------------------------------------------------------
+# write_<prop>: 0 = Do not output 'Prop'
+#               1 = Output Prop 
+#----------------------------------------------------------
+write_dens  = 1
+
+write_x_vel = 1
+write_y_vel = 0
+write_z_vel = 0
+write_speed = 0
+write_mach  = 0
+
+write_tr_temp  = 1
+write_rot_temp = 0
+write_vib_temp = 0
+write_tot_temp = 0
+write_temp_x   = 0
+write_temp_y   = 0
+write_temp_z   = 0
+
+write_tr_energy  = 0
+write_rot_energy = 0
+write_vib_energy = 0
+write_tot_energy = 0
+
+write_entropy      = 0
+write_heat_flux_x  = 0
+write_heat_flux_y  = 0
+write_heat_flux_z  = 0
+write_shear_stress = 0
+
+#----------------------------------------------------------
+# write_moment   - number of moments to write
+# moment_numbers - moments to write
+#  - the length of moment_numbers must be >= write_moment
+#----------------------------------------------------------
+write_moment = 3
+moment_numbers = '4 6 8'
+
+#==========================================================
+#             Restart File Info
+#==========================================================
+[restart]
+
+#----------------------------------------------------------
+# read_rst
+#	1 - activate read restart at beginning of run
+# write_rst
+#	1 - activate write restart every write_freq time
+#	    steps
+# write_freq - frequency for restart write
+# 	     - if 0, and WriteRst=1, only write at end
+#----------------------------------------------------------
+read_rst  = 0
+write_rst = 0
+
+write_freq = 0
+
+read_filename  = restart.rst
+write_filename = restart.rst
+

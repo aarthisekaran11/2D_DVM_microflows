@@ -1,0 +1,13 @@
+Reference values:
+Mass =   6.62999997E-26
+Diameter =   4.16999990E-10
+Cross-section =   5.47041993E-19
+Density =   1.00000000E+20
+Temperature =   2.73000000E+02
+Speed =   3.37176861E+02
+Pressure =   7.53753000E-01
+Heat Flux =   2.54148071E-18
+Energy =   7.53753000E-21
+Flow Knudsen number =   1.09100000E+00
+Characteristic length scale =   1.67553916E-02
+Time scale =   4.96931835E-05

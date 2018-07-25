@@ -1,0 +1,77 @@
+#system backups
+*\.#
+*~
+*.#*
+*.gcno
+*.gcda
+*.bak
+
+#files created by make
+*.out
+*.o
+*.mod
+*.dep1
+*.dep2
+*.deps/
+*.dirstamp
+*.license.stamp
+*dvm_exe
+*libdvm.a
+*TAGS
+
+#files created by configure
+*Makefile
+*Makefile.in
+*aclocal.m4
+*autom4te.cache/
+*config.guess
+*config.sub
+*install-sh
+*ltmain.sh
+*missing
+*config.h
+*config.h.in
+*config.status
+*configure
+*libtool
+*stamp-h1
+
+#files created by latex
+*.aux
+*.bbl
+*.blg
+*.dvi
+*.idx
+*.ilg
+*.ind
+*.lof
+*.log
+*.lot
+*.ps
+*.pdf
+*.toc
+*.nlo
+*.nls
+
+#figure files in proposal
+documentation/proposal/figs/*
+
+#data and tecplot files
+*.dat
+*.phy
+*.rst
+
+#dsmc
+*DS1.f90
+*DIAG.TXT
+*DS1OUT.DAT
+*DS1VD.TXT
+*PARAMETERS.DAT
+*PROFILE.DAT
+*profile.dat
+*RESTART.DAT
+*.OUT
+*.RES
+
+#shock_calculator test results
+*software/shock_calculator/normal_shock/parameters.txt

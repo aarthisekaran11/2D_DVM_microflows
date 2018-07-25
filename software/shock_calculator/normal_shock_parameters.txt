@@ -1,0 +1,32 @@
+n_ref =   0.10000000E+20 [#/m^3]
+T_ref =   0.27300000E+03 [K]
+species_ref = Xe
+mass_ref =   0.21800001E-24 [kg]
+eta_ref =   0.18595577E+03 [m/s]
+
+Xe: 0.030000
+    mass =  1.0000000000 d.o.f = 3.00000
+He: 0.970000
+    mass =  0.0305045874 d.o.f = 3.00000
+
+Molecular mass =   0.12990501E-25 [kg]
+Specific heat ratio = 1.70175
+
+Mach number (shock reference frame) = 3.900000
+
+Stationary shock ( yes = 1, no = 0 )? 1
+
+Pressure ratio (P2/P1) = 18.9009090909
+Density ratio (n2/n1) =  3.2424418605
+Temperature ratio (T2/T1) =  5.8292206628
+
+n_up =  1.0000000000
+T_up =  1.0000000000
+u_up = 14.7371451425
+n_down =  3.2424418605
+T_down =  5.8292206628
+u_down =  4.5450761422
+
+x-velocity = ( -17.5371450949,   2.2151818735 )
+y-velocity = (  -6.7602580158,   6.7602580158 )
+z-velocity = (  -6.7602580158,   6.7602580158 )

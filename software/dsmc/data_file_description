@@ -1,0 +1,55 @@
+1.  n - version number
+2.  m - version number
+3.  approximate # of MB
+4.  type of flow 0:plane, 1:cylindrical, 2:spherical
+5.  minimum x-coordinate
+6.  boundary for min. x-coor. 0:stream, 1:symmetry, 2:solid, 3:vacuum
+7.  maximum x-coordinate
+8.  boundary for max. x-coor.
+-   for type of flow > 0
+	1. radial weighting factors flag
+	2. max weighting factor
+9.  gas code 1:hardsphere, 2:argon, 3:nitrogen, 4:real oxygen, 5:ideal air,
+	6:real air, 7:helium-xenon, 8:oxygen-hydrogen
+10. initial state 0:vacuum, 1:stream or reference gas
+11. secondary stream flag
+-   for secondary stream = 1
+	1. secondary stream boundary
+12. stream number density
+13. stream temperature
+13a. stream rotational temperature
+-   if vibrational excitation possible
+	1. stream vibrational temperature
+14. stream velocity in x-direction
+-   if version number high enough
+	1. stream velocity in y-direction
+-   if more than one species
+	1-N. number fraction of each species
+LOOP OVER BOTH BOUNDARIES:
+{
+-   if boundary is a solid wall
+	1. temperature of surface
+	2. specular reflection fraction
+	3. velocity in y-direction of surface
+}
+-   if minimum boundary is a stream boundary
+	1. molecule removal flag
+	-  if molecule removal = 1
+		1. x-coordinate for beginning of full removal
+-   if maximum boundary is a symmetry boundary
+	1. boundary movement flag 0:stationary, 1:constant speed
+	-  if boundary movement is constant speed
+		1. speed of the outer boundary
+15. target number of molecules per sampling cell
+16. number of collision cells per sampling cell
+17. maximum collisions in a time step
+18. maximum sampling cell transits in a time step
+19. collision sampling 0:random selection, 1:nearest neighbor
+20. move time step 0:uniform, 1:vary cell to cell
+21. number of time steps in sampling interval
+22. number of sampling intervals in an output interval
+23. steadiness 0:eventually steady, 1:coninuing unsteady
+24. fraction of output interval that is unsteady
+25. chemical reactions 0:continuum rate equations, 1:quantum kinetic theory
+26. recombination 0:not included, 1:included
+

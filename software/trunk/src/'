@@ -1,0 +1,587 @@
+!-----------------------------------------------------------------------bl-
+!--------------------------------------------------------------------------
+! 
+! DVM - a discrete velocity method for solving the Boltzmann equation
+!
+! Copyright (C) 2010,2011 The PECOS Development Team
+!
+! This program is free software; you can redistribute it and/or
+! modify it under the terms of the Version 2 GNU General
+! Public License as published by the Free Software Foundation.
+!
+! This program is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+! General Public License for more details.
+!
+! You should have received a copy of the GNU General Public License
+! along with this library; if not, write to the Free Software
+! Foundation, Inc. 51 Franklin Street, Fifth Floor, Boston, MA
+! 02110-1301 USA
+!
+!-----------------------------------------------------------------------el-
+! $Id: $
+!--------------------------------------------------------------------------
+module Convection
+
+  use Constants
+  use SpeciesAndReferenceData
+
+  implicit none
+
+  private
+
+  integer :: convection_update
+  logical :: enable_convection = .false.
+
+  integer, parameter :: first_order_upwind = 1
+  integer, parameter :: fourth_order_tan   = 4
+
+  public :: set_convection_update
+  public :: get_convection_flag
+  public :: compute_convection
+
+contains
+
+  subroutine set_convection_update( convection_update_in )
+
+    implicit none
+
+    integer, intent(in) :: convection_update_in
+
+    convection_update = convection_update_in
+    if( convection_update .gt. 0 ) enable_convection = .true.
+
+    return
+  end subroutine set_convection_update
+
+  subroutine get_convection_flag( enable_convection_out )
+
+    implicit none
+
+    logical :: enable_convection_out
+
+    enable_convection_out = enable_convection
+
+    return
+  end subroutine get_convection_flag
+
+  subroutine compute_convection( phi, phi_conv, molecule, vel_grid, species, deltat )
+
+    use DistFunc
+    use VelocityGrid
+    use PhysicalGrid
+    use BoundaryConditions
+    
+    implicit none
+
+    type(VelocityGridType), intent(in) :: vel_grid
+    type(MoleculeType), intent(in) :: molecule
+    double precision, intent(in) :: deltat
+    integer, intent(in) :: species
+
+    type(DistFuncType), dimension(:,:) :: phi, phi_conv
+
+    integer :: nx_space, ny_space, nx, ny
+
+    if( enable_convection .eqv. .false. ) return
+
+    call get_nspace( nx_space, ny_space )
+
+    ! Apply boundary conditions first - BCs are done first order
+    call apply_boundary_conditions( phi, phi_conv, molecule, vel_grid, species )
+
+    select case( convection_update )
+    case( first_order_upwind )
+       call first_order_scheme( phi, phi_conv, molecule, vel_grid, deltat )
+
+    case( fourth_order_tan )
+!       call fourth_order_scheme( phi, phi_conv, molecule, vel_grid, deltat )
+
+    case default
+       write(*,*) "Error: Invalid value of convection_update - :", convection_update
+       stop
+    end select
+
+    do nx = 1, nx_space
+       do ny = 1, ny_space
+          call perform_dist_func_update( phi(nx,ny), phi_conv(nx,ny), molecule, vel_grid )
+       end do
+    end do
+
+    return
+  end subroutine compute_convection
+
+
+
+
+
+  subroutine first_order_scheme( phi, phi_conv, molecule, vel_grid, deltat )
+
+    use DistFunc
+    use VelocityGrid
+    use PhysicalGrid
+    use BoundaryConditions
+    
+    implicit none
+
+    type(DistFuncType), dimension(:,:) :: phi_conv
+
+    type(DistFuncType), dimension(:,:), intent(in) :: phi
+    type(VelocityGridType), intent(in) :: vel_grid
+    type(MoleculeType), intent(in) :: molecule
+    double precision, intent(in) :: deltat
+
+    double precision :: deltax, deltay
+    integer :: nx_space, ny_space
+
+    double precision :: cfl_x, cfl_y, factor_x, factor_y, x_vel, y_vel
+    double precision :: phi_0, phi_x, phi_y
+
+    integer :: r_modes, v_modes
+
+    integer :: i_min, i_max, j_min, j_max, k_min, k_max
+    integer :: i_zero, i_next
+    integer :: r_levels, v_levels
+    integer :: i, j, k, nx, ny
+
+    call get_delta_x( deltax, deltay )
+    call get_nspace( nx_space, ny_space )
+
+    factor_x = deltat/deltax
+    factor_y = deltat/deltay
+
+    r_modes = molecule%rot_modes
+    v_modes = molecule%vib_modes
+
+    do nx = 2, nx_space-1
+       do ny = 2, ny_space-1
+
+          r_levels = phi(nx,ny)%num_rot_levels
+          v_levels = phi(nx,ny)%num_vib_levels
+   
+          i_min = vel_grid%i_min
+          i_max = vel_grid%i_max
+          j_min = vel_grid%j_min
+          j_max = vel_grid%j_max
+          k_min = vel_grid%k_min
+          k_max = vel_grid%k_max
+  
+          do k = k_min, k_max
+             do j = j_min, j_max
+                do i = i_min, i_max
+
+                   x_vel = vel_grid%x(i)
+                   y_vel = vel_grid%y(j)
+
+                   cfl_x = factor_x*x_vel
+                   cfl_y = factor_y*y_vel
+   
+                   phi_0 = phi(nx,ny)%value(i,j,k)
+   
+                   if( x_vel .lt. zero )then !x-vel neg
+   
+                      phi_x = phi(nx+1,ny)%value(i,j,k)
+
+                      if ( y_vel .lt. zero )then !y-vel neg
+
+                         phi_y = phi(nx,ny+1)%value(i,j,k)
+   
+                         phi_conv(nx,ny)%value(i,j,k) = phi_0 + &
+                              abs(cfl_x)*( phi_x - phi_0 ) + abs(cfl_y)*( phi_y - phi_0 )
+
+                         if( r_modes .gt. 0 )then
+                            phi_conv(nx,ny)%rot(:,i,j,k) = phi(nx,ny)%rot(:,i,j,k) + &
+                                 abs(cfl_x)*( phi(nx+1,ny)%rot(:,i,j,k) - phi(nx,ny)%rot(:,i,j,k) ) + &
+                                 abs(cfl_y)*( phi(nx,ny+1)%rot(:,i,j,k) - phi(nx,ny)%rot(:,i,j,k) )
+                         end if
+      
+                         if( v_modes .gt. 0 )then
+                            phi_conv(nx,ny)%vib(:,i,j,k) = phi(nx,ny)%vib(:,i,j,k) + &
+                                 abs(cfl_x)*( phi(nx+1,ny)%vib(:,i,j,k) - phi(nx,ny)%vib(:,i,j,k) ) + &
+                                 abs(cfl_y)*( phi(nx,ny+1)%vib(:,i,j,k) - phi(nx,ny)%vib(:,i,j,k) )
+                         end if
+                      else ! y-vel pos
+
+                         phi_y = phi(nx,ny-1)%value(i,j,k)
+   
+                         phi_conv(nx,ny)%value(i,j,k) = phi_0 + &
+                              abs(cfl_x)*( phi_x - phi_0 ) + abs(cfl_y)*( phi_y - phi_0 )
+
+                         if( r_modes .gt. 0 )then
+                            phi_conv(nx,ny)%rot(:,i,j,k) = phi(nx,ny)%rot(:,i,j,k) + &
+                                 abs(cfl_x)*( phi(nx+1,ny)%rot(:,i,j,k) - phi(nx,ny)%rot(:,i,j,k) ) + &
+                                 abs(cfl_y)*( phi(nx,ny-1)%rot(:,i,j,k) - phi(nx,ny)%rot(:,i,j,k) )
+                         end if
+      
+                         if( v_modes .gt. 0 )then
+                            phi_conv(nx,ny)%vib(:,i,j,k) = phi(nx,ny)%vib(:,i,j,k) + &
+                                 abs(cfl_x)*( phi(nx+1,ny)%vib(:,i,j,k) - phi(nx,ny)%vib(:,i,j,k) ) + &
+                                 abs(cfl_y)*( phi(nx,ny-1)%vib(:,i,j,k) - phi(nx,ny)%vib(:,i,j,k) )
+                         end if
+
+                      end if
+   
+                   else ! x-vel pos
+   
+                      phi_x = phi(nx-1,ny)%value(i,j,k)
+
+                      if ( y_vel .lt. zero )then !y-vel neg
+
+                         phi_y = phi(nx,ny+1)%value(i,j,k)
+   
+                         phi_conv(nx,ny)%value(i,j,k) = phi_0 + &
+                              abs(cfl_x)*( phi_x - phi_0 ) + abs(cfl_y)*( phi_y - phi_0 )
+
+                         if( r_modes .gt. 0 )then
+                            phi_conv(nx,ny)%rot(:,i,j,k) = phi(nx,ny)%rot(:,i,j,k) + &
+                                 abs(cfl_x)*( phi(nx-1,ny)%rot(:,i,j,k) - phi(nx,ny)%rot(:,i,j,k) ) + &
+                                 abs(cfl_y)*( phi(nx,ny+1)%rot(:,i,j,k) - phi(nx,ny)%rot(:,i,j,k) )
+                         end if
+      
+                         if( v_modes .gt. 0 )then
+                            phi_conv(nx,ny)%vib(:,i,j,k) = phi(nx,ny)%vib(:,i,j,k) + &
+                                 abs(cfl_x)*( phi(nx-1,ny)%vib(:,i,j,k) - phi(nx,ny)%vib(:,i,j,k) ) + &
+                                 abs(cfl_y)*( phi(nx,ny+1)%vib(:,i,j,k) - phi(nx,ny)%vib(:,i,j,k) )
+                         end if
+                      else ! y-vel pos
+
+                         phi_y = phi(nx,ny-1)%value(i,j,k)
+   
+                         phi_conv(nx,ny)%value(i,j,k) = phi_0 + &
+                              abs(cfl_x)*( phi_x - phi_0 ) + abs(cfl_y)*( phi_y - phi_0 )
+
+                         if( r_modes .gt. 0 )then
+                            phi_conv(nx,ny)%rot(:,i,j,k) = phi(nx,ny)%rot(:,i,j,k) + &
+                                 abs(cfl_x)*( phi(nx-1,ny)%rot(:,i,j,k) - phi(nx,ny)%rot(:,i,j,k) ) + &
+                                 abs(cfl_y)*( phi(nx,ny-1)%rot(:,i,j,k) - phi(nx,ny)%rot(:,i,j,k) )
+                         end if
+      
+                         if( v_modes .gt. 0 )then
+                            phi_conv(nx,ny)%vib(:,i,j,k) = phi(nx,ny)%vib(:,i,j,k) + &
+                                 abs(cfl_x)*( phi(nx-1,ny)%vib(:,i,j,k) - phi(nx,ny)%vib(:,i,j,k) ) + &
+                                 abs(cfl_y)*( phi(nx,ny-1)%vib(:,i,j,k) - phi(nx,ny)%vib(:,i,j,k) )
+                         end if
+                      end if
+                   end if
+   
+                end do
+             end do
+          end do
+
+       end do
+    end do
+
+    return
+  end subroutine first_order_scheme
+
+
+
+
+
+
+
+  subroutine first_order_scheme( phi, phi_conv, molecule, vel_grid, deltat )
+
+    use DistFunc
+    use VelocityGrid
+    use PhysicalGrid
+    use BoundaryConditions
+    
+    implicit none
+
+    type(DistFuncType), dimension(:) :: phi_conv
+
+    type(DistFuncType), dimension(:), intent(in) :: phi
+    type(VelocityGridType), intent(in) :: vel_grid
+    type(MoleculeType), intent(in) :: molecule
+    double precision, intent(in) :: deltat
+
+    double precision :: deltax, deltay
+    integer :: nx_space, ny_space
+
+    double precision :: cfl, factor, x_vel, factor_up, factor_down
+    double precision :: phi_0, phi_1, phi_m1
+
+    integer :: r_modes, v_modes
+
+    integer :: i_min, i_max, j_min, j_max, k_min, k_max
+    integer :: i_zero, i_next
+    integer :: r_levels, v_levels
+    integer :: i, j, k, nx
+
+    call get_delta_x( deltax, deltay )
+    call get_nspace( nx_space, ny_space )
+
+    factor_up = deltat/deltax
+    factor_down = deltat/deltax
+
+    r_modes = molecule%rot_modes
+    v_modes = molecule%vib_modes
+
+    do nx = 2, nx_space-1
+
+!!$       if( nx .lt. 120 )then
+!!$          deltax = 1.8d0
+!!$          factor_up = deltat/deltax
+!!$          factor_down = deltat/deltax
+!!$       else if( nx .eq. 120 )then
+!!$          deltax = 0.4d0
+!!$          factor_up = deltat/0.4d0
+!!$          factor_down = deltat/1.8d0
+!!$       else
+!!$          deltax = 0.4d0
+!!$          factor_up = deltat/0.4d0
+!!$          factor_down = deltat/0.4d0
+!!$       end if
+
+       r_levels = phi(nx)%num_rot_levels
+       v_levels = phi(nx)%num_vib_levels
+
+       i_min = vel_grid%i_min
+       i_max = vel_grid%i_max
+       j_min = vel_grid%j_min
+       j_max = vel_grid%j_max
+       k_min = vel_grid%k_min
+       k_max = vel_grid%k_max
+
+       i_zero = vel_grid%i_zero
+       i_next = i_zero + 1
+
+       do k = k_min, k_max
+          do j = j_min, j_max
+             do i = i_min, i_max
+
+                x_vel = vel_grid%x(i)
+
+                phi_0 = phi(nx)%value(i,j,k)
+
+                if( x_vel .lt. zero )then
+                   cfl = factor_up*x_vel
+
+                   phi_1 = phi(nx+1)%value(i,j,k)
+
+                   phi_conv(nx)%value(i,j,k) = phi_0 - cfl*( phi_1 - phi_0 )
+
+                   if( r_modes .gt. 0 )then
+                      phi_conv(nx)%rot(:,i,j,k) = phi(nx)%rot(:,i,j,k) - &
+                           cfl*( phi(nx+1)%rot(:,i,j,k) - phi(nx)%rot(:,i,j,k) )
+                   end if
+
+                   if( v_modes .gt. 0 )then
+                         phi_conv(nx)%vib(:,i,j,k) = phi(nx)%vib(:,i,j,k) - &
+                              cfl*( phi(nx+1)%vib(:,i,j,k) - phi(nx)%vib(:,i,j,k) )
+                   end if
+
+                else
+                   cfl = factor_down*x_vel
+
+                   phi_m1 = phi(nx-1)%value(i,j,k)
+
+                   phi_conv(nx)%value(i,j,k) = phi_0 - cfl*( phi_0 - phi_m1 )
+
+                   if( r_modes .gt. 0 )then
+                         phi_conv(nx)%rot(:,i,j,k) = phi(nx)%rot(:,i,j,k) - &
+                              cfl*( phi(nx)%rot(:,i,j,k) - phi(nx-1)%rot(:,i,j,k) )
+                   end if
+
+                   if( v_modes .gt. 0 )then
+                         phi_conv(nx)%vib(:,i,j,k) = phi(nx)%vib(:,i,j,k) - &
+                              cfl*( phi(nx)%vib(:,i,j,k) - phi(nx-1)%vib(:,i,j,k) )
+                   end if
+
+                end if
+
+             end do
+          end do
+       end do
+
+    end do
+
+    return
+  end subroutine first_order_scheme
+
+  subroutine fourth_order_scheme( phi, phi_conv, molecule, vel_grid, deltat )
+
+    use DistFunc
+    use VelocityGrid
+    use PhysicalGrid
+    use BoundaryConditions
+
+    implicit none
+
+    type(DistFuncType), dimension(:), intent(in) :: phi
+    type(VelocityGridType), intent(in) :: vel_grid
+    type(MoleculeType), intent(in) :: molecule
+    double precision, intent(in) :: deltat
+
+    type(DistFuncType), dimension(:) :: phi_conv
+
+    double precision :: deltax, deltay
+    integer :: nx_space, ny_space
+
+    double precision :: c, factor, x_vel
+    double precision :: a_m2, a_m1, a_0, a_1, a_2
+    double precision :: phi_0, phi_1, phi_2, phi_m1, phi_m2
+
+    integer :: r_modes, v_modes
+
+    integer :: i_min, i_max, j_min, j_max, k_min, k_max
+    integer :: r_levels, v_levels
+    integer :: l, i, j, k, nx, n
+
+    integer, dimension(4) :: ind
+
+    double precision :: dens_in, dens_out, dens_change
+
+    call get_delta_x( deltax, deltay )
+    call get_nspace( nx_space, ny_space )
+
+    factor = deltat/deltax
+
+    r_modes = molecule%rot_modes
+    v_modes = molecule%vib_modes
+
+    do nx = 4, nx_space-3
+
+       r_levels = phi(nx)%num_rot_levels
+       v_levels = phi(nx)%num_vib_levels
+
+       i_min = vel_grid%i_min
+       i_max = vel_grid%i_max
+       j_min = vel_grid%j_min
+       j_max = vel_grid%j_max
+       k_min = vel_grid%k_min
+       k_max = vel_grid%k_max
+
+       do k = k_min, k_max
+          do j = j_min, j_max
+             do i = i_min, i_max
+
+                x_vel = vel_grid%x(i)
+                c = factor*x_vel
+
+                phi_m2 = phi(nx-2)%value(i,j,k)
+                phi_m1 = phi(nx-1)%value(i,j,k)
+                phi_0  = phi(nx)%value(i,j,k)
+                phi_1  = phi(nx+1)%value(i,j,k)
+                phi_2  = phi(nx+2)%value(i,j,k)
+
+                a_m2 = -c*( one - c*c )*( two + c )/24.0d0
+                a_m1 = c*( one + c )*( four - c*c )/6.0d0
+                a_0  = ( one - c*c )*( four - c*c )/4.0d0
+                a_1  = -c*( one - c )*( four - c*c )/6.0d0
+                a_2  = c*( one - c*c )*( two - c )/24.0d0
+
+                phi_conv(nx)%value(i,j,k) = a_m2*phi_m2 + a_m1*phi_m1 + a_0*phi_0 + a_1*phi_1 + a_2*phi_2
+
+                if( r_modes .gt. 0 )then
+                   do l = 1, r_levels
+                      phi_conv(nx)%rot(l,i,j,k) = &
+                           a_m2*phi_conv(nx-2)%rot(l,i,j,k) + &
+                           a_m1*phi_conv(nx-1)%rot(l,i,j,k) + &
+                           a_0*phi_conv(nx)%rot(l,i,j,k) + &
+                           a_1*phi_conv(nx+1)%rot(l,i,j,k) + &
+                           a_2*phi_conv(nx+2)%rot(l,i,j,k)
+                   end do
+                end if
+
+                if( v_modes .gt. 0 )then
+                   do l = 1, v_levels
+                      phi_conv(nx)%vib(l,i,j,k) = &
+                           a_m2*phi_conv(nx-2)%vib(l,i,j,k) + &
+                           a_m1*phi_conv(nx-1)%vib(l,i,j,k) + &
+                           a_0*phi_conv(nx)%vib(l,i,j,k) + &
+                           a_1*phi_conv(nx+1)%vib(l,i,j,k) + &
+                           a_2*phi_conv(nx+2)%vib(l,i,j,k)
+                   end do
+                end if
+
+             end do
+          end do
+       end do
+
+    end do
+
+    ind(1) = 2
+    ind(2) = nx_space - 1
+    ind(3) = 3
+    ind(4) = nx_space - 2
+
+    do n = 1, 4
+       nx = ind(n)
+
+       r_levels = phi(nx)%num_rot_levels
+       v_levels = phi(nx)%num_vib_levels
+
+       i_min = vel_grid%i_min
+       i_max = vel_grid%i_max
+       j_min = vel_grid%j_min
+       j_max = vel_grid%j_max
+       k_min = vel_grid%k_min
+       k_max = vel_grid%k_max
+
+       dens_in = zero
+       dens_out = zero
+       dens_change = zero
+       do k = k_min, k_max
+          do j = j_min, j_max
+             do i = i_min, i_max
+
+                x_vel = vel_grid%x(i)
+                c = factor*x_vel
+
+                phi_0 = phi(nx)%value(i,j,k)
+
+                if( x_vel .lt. zero )then
+
+                   phi_1 = phi(nx+1)%value(i,j,k)
+
+                   phi_conv(nx)%value(i,j,k) = phi_0 - c*( phi_1 - phi_0 )
+
+                   if( r_modes .gt. 0 )then
+                      do l = 1, r_levels
+                         phi_conv(nx)%rot(l,i,j,k) = phi(nx)%rot(l,i,j,k) - &
+                              c*( phi(nx+1)%rot(l,i,j,k) - phi(nx)%rot(l,i,j,k) )
+                      end do
+                   end if
+
+                   if( v_modes .gt. 0 )then
+                      do l = 1, v_levels
+                         phi_conv(nx)%vib(l,i,j,k) = phi(nx)%vib(l,i,j,k) - &
+                              c*( phi(nx+1)%vib(l,i,j,k) - phi(nx)%vib(l,i,j,k) )
+                      end do
+                   end if
+
+                else
+
+                   phi_m1 = phi(nx-1)%value(i,j,k)
+
+                   phi_conv(nx)%value(i,j,k) = phi_0 - c*( phi_0 - phi_m1 )
+
+                   if( r_modes .gt. 0 )then
+                      do l = 1, r_levels
+                         phi_conv(nx)%rot(l,i,j,k) = phi(nx)%rot(l,i,j,k) - &
+                              c*( phi(nx)%rot(l,i,j,k) - phi(nx-1)%rot(l,i,j,k) )
+                      end do
+                   end if
+
+                   if( v_modes .gt. 0 )then
+                      do l = 1, v_levels
+                         phi_conv(nx)%vib(l,i,j,k) = phi(nx)%vib(l,i,j,k) - &
+                              c*( phi(nx)%vib(l,i,j,k) - phi(nx-1)%vib(l,i,j,k) )
+                      end do
+                   end if
+
+                end if
+
+             end do
+          end do
+       end do
+
+    end do
+
+    return
+  end subroutine fourth_order_scheme
+
+end module Convection

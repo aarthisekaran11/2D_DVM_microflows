@@ -1,0 +1,560 @@
+#  -*-getpot-*- 
+#
+#==========================================================
+#                   REFERENCE DATA
+#==========================================================
+[reference]
+
+#----------------------------------------------------------
+# Kn - Knudsen number = lamba_ref / L
+#                     = 1 / ( L * n_ref * sigma_ref )
+# NOTE: Homogeneous relaxations and shocks should have 
+#       Kn = 1
+#----------------------------------------------------------
+Kn = 1.091d0
+
+#----------------------------------------------------------
+# n_ref, T_ref - reference number density, temperature
+#----------------------------------------------------------
+n_ref = 1e20 # [molecules/m^3]
+T_ref = 273  # [K]
+
+#----------------------------------------------------------
+# species_ref - reference species
+#----------------------------------------------------------
+species_ref = 'Ar'
+
+
+#==========================================================
+#                      SPECIES DATA
+#==========================================================
+[species]
+
+#----------------------------------------------------------
+# Number of species in mixture
+#----------------------------------------------------------
+num_species = 1
+
+#----------------------------------------------------------
+# Species in mixture
+#----------------------------------------------------------
+species_codes = 'Ar'
+
+#----------------------------------------------------------
+# Rotational and Vibrational levels modeled
+#----------------------------------------------------------
+num_rot_levels = '1'
+num_vib_levels = '1'
+
+#==========================================================
+#                  CROSS SECTION MODEL
+#==========================================================
+[csection_model]
+
+#----------------------------------------------------------
+# Cross Section Method Flag
+#        1 = Hard sphere
+#	 2 = Pseudo-Maxwell
+#	 3 = VHS
+#	 4 = VSS
+#----------------------------------------------------------
+csection_method = 3
+
+#----------------------------------------------------------
+# Cross section coefficient
+#        1 = Clarke
+#	 2 = Bird
+#	 3 = vki
+#----------------------------------------------------------
+csection_coeff = 2
+
+
+#==========================================================
+#             PHYSICAL GRID DEFINITIONS
+#==========================================================
+[phy_grid]
+
+#----------------------------------------------------------
+# Characteristic length scale
+#   - if L < 0 => characteristic length scale is the 
+#     reference mean free path and delta_x and n_space
+#     are used
+#   - if L > 0 => only delat_x is used, n_space is 
+#     calculated
+#----------------------------------------------------------
+L = -1.0d0
+
+#----------------------------------------------------------
+# Scaled distance between grid points
+#----------------------------------------------------------
+delta_x = '0.1d0'
+delta_y = '0.1d0'
+
+#----------------------------------------------------------
+# Number of physical grid points (in x-direction)
+#----------------------------------------------------------
+nx_space = '10'
+ny_space = '10'
+
+
+#==========================================================
+#               TIME-STEPPING PARAMETERS
+#==========================================================
+[time_stepping]
+
+#----------------------------------------------------------
+# Scaled final time
+#----------------------------------------------------------
+t_final = 5.0d0
+
+#----------------------------------------------------------
+# time step fraction
+#   - fraction of the smallest time scale used for deltat
+#----------------------------------------------------------
+t_frac = 0.5d0
+
+#----------------------------------------------------------
+# Scaled time step
+#----------------------------------------------------------
+deltat = 0.02d0
+
+#----------------------------------------------------------
+# Number of time steps
+#----------------------------------------------------------
+ntstep = 10000
+
+
+#==========================================================
+#               VELOCITY GRID DEFINITIONS
+#==========================================================
+[vel_grid]
+
+#----------------------------------------------------------
+# Velocity grid setup
+#        0 = read grid from file
+#	 1 = uniform grid
+#----------------------------------------------------------
+x_vel_grid_type = '1'
+y_vel_grid_type = '1'
+z_vel_grid_type = '1'
+
+#----------------------------------------------------------
+# Number of grid points
+#----------------------------------------------------------
+num_points_x = '18'
+num_points_y = '18'
+num_points_z = '18'
+
+#----------------------------------------------------------
+# Velocity domain
+#----------------------------------------------------------
+xv_min = '-3.25d0'
+xv_max = '3.25d0'
+
+yv_min = '-3.25d0'
+yv_max = '3.25d0'
+
+zv_min = '-3.25d0'
+zv_max = '3.25d0'
+
+
+#==========================================================
+#             Boundary Conditions 
+#==========================================================
+[boundary]
+
+#----------------------------------------------------------
+# Domain initialization
+#        1 = Initialize Domain w/ Left Wall Props
+#        2 = Initialize Domain w/ Right Wall Props
+#        3 = Initialize half w/ Right and half w/ Left
+#	 4 = Rankine-Hugoniot half and half
+#	 5 = Specified in input file
+#----------------------------------------------------------
+InitC = '5'
+
+#----------------------------------------------------------
+# Initial half-shock thickness (InitC = 4)
+#    - set thickness of initial shock in spatial units
+#----------------------------------------------------------
+shock_thickness = '1'
+spatial_middle = '1'
+
+#----------------------------------------------------------
+# Distribution used in domain initialization
+#        1 = Maxwellian DF
+#        2 = BKW distribution
+#        3 = Delta function
+#----------------------------------------------------------
+InitDF = '1'
+
+#----------------------------------------------------------
+# x,y,z coordinates of delta function (InitDF=3)
+#----------------------------------------------------------
+x_delta_loc = '0.0d0'
+y_delta_loc = '0.0d0'
+z_delta_loc = '0.0d0'
+
+#----------------------------------------------------------
+# Energy distribution used in domain initialization
+#        1 = Rigid rotor Boltzmann df
+#	 2 = Nonrigid rotor Boltzmann df
+#----------------------------------------------------------
+InitRot = '1'
+
+#----------------------------------------------------------
+# Energy distribution used in domain initialization
+#        1 = SHO Boltzmann DF
+#	 2 = AHO Boltzmann DF
+#----------------------------------------------------------
+InitVib = '1'
+
+#----------------------------------------------------------
+# User input domain init
+#    - density, x-velocity, temperatures
+#----------------------------------------------------------
+dens_init     = '1.0d0'
+x_vel_init    = '0.0d0'
+y_vel_init    = '0.0d0'
+z_vel_init    = '0.0d0'
+tr_temp_init  = '1.0d0'
+rot_temp_init = '0.0d0'
+vib_temp_init = '0.0d0'
+
+#----------------------------------------------------------
+# Left wall properties
+#    - density, x-velocity, temperatures
+#----------------------------------------------------------
+dens_LW     = '1.0d0'
+x_vel_LW    = '0.0d0'
+y_vel_LW    = '0.0d0'
+z_vel_LW    = '0.0d0'
+tr_temp_LW  = '1.0d0'
+rot_temp_LW = '0.0d0'
+vib_temp_LW = '0.0d0'
+
+#----------------------------------------------------------
+# Left wall boundary condition 
+#        1 = Wall
+#        2 = In/out flow (Specified wall props)
+#        3 = Zero grad (e.g. phi(x=0,vel)=phi(x=dx,vel)
+#        4 = Couette
+#----------------------------------------------------------
+LWallBC = '1'
+
+#----------------------------------------------------------
+# Right wall properties
+#    - density, x-velocity, temperatures
+#----------------------------------------------------------
+dens_RW     = '1.0d0'
+x_vel_RW    = '0.0d0'
+y_vel_RW    = '0.0d0'
+z_vel_RW    = '0.0d0'
+tr_temp_RW  = '1.0d0'
+rot_temp_RW = '0.0d0'
+vib_temp_RW = '0.0d0'
+
+#----------------------------------------------------------
+# Right wall boundary condition 
+#        1 = Wall
+#        2 = In/out flow (Specified wall props)
+#        3 = Zero grad (e.g. phi(x=0,vel)=phi(x=dx,vel)
+#        4 = Couette
+#----------------------------------------------------------
+RWallBC = '1'
+
+#----------------------------------------------------------
+# Bottom wall properties
+#    - density, x-velocity, temperatures
+#----------------------------------------------------------
+dens_BW     = '1.0d0'
+x_vel_BW    = '0.0d0'
+y_vel_BW    = '0.0d0'
+z_vel_BW    = '0.0d0'
+tr_temp_BW  = '1.0d0'
+rot_temp_BW = '0.0d0'
+vib_temp_BW = '0.0d0'
+
+#----------------------------------------------------------
+# Left wall boundary condition 
+#        1 = Wall
+#        2 = In/out flow (Specified wall props)
+#        3 = Zero grad (e.g. phi(x=0,vel)=phi(x=dx,vel)
+#----------------------------------------------------------
+BWallBC = '1'
+
+#----------------------------------------------------------
+# Top wall properties
+#    - density, x-velocity, temperatures
+#----------------------------------------------------------
+dens_TW     = '1.0d0'
+x_vel_TW    = '0.02965d0'
+y_vel_TW    = '0.0d0'
+z_vel_TW    = '0.0d0'
+tr_temp_TW  = '1.0d0'
+rot_temp_TW = '0.0d0'
+vib_temp_TW = '0.0d0'
+
+#----------------------------------------------------------
+# Left wall boundary condition 
+#        1 = Wall
+#        2 = In/out flow (Specified wall props)
+#        3 = Zero grad (e.g. phi(x=0,vel)=phi(x=dx,vel)
+#----------------------------------------------------------
+TWallBC = '1'
+
+#----------------------------------------------------------
+# Accomodation coefficient - if either boundary is a wall
+#        0.0d0 = fully specular walls
+#	 1.0d0 = fully diffuse walls 	 
+#----------------------------------------------------------
+acc_coeff = 1.0d0
+
+#==========================================================
+#                 COLLISION PROPERTIES
+#==========================================================
+[collision]
+
+#----------------------------------------------------------
+# Type of Collision routine
+#        0 = No Collisions
+#        1 = N^2 method for Collisions (no ie)
+#        2 = Full Monte Carlo
+#        3 = Variance Reduction Method
+#----------------------------------------------------------
+iColl = 3
+
+#----------------------------------------------------------
+# If iColl = 3, set the minimum number of collisions 
+# needed before the equilibrium df is recalculated
+#----------------------------------------------------------
+coll_limit = 1
+cdf_tolerance = 0.01d0
+
+#----------------------------------------------------------
+# Method for rotational energy exchanges
+#        1 = Rigid rotor Larsen-Borgnakke
+#	 2 = Non-rigid rotor Larsen-Borgnakke
+#----------------------------------------------------------
+RotColl = 1
+
+#----------------------------------------------------------
+# Method for vibrational energy exchanges
+#        1 = Harmonic Oscillator Larsen-Borgnakke
+#	 2 = Anharmonic Oscillator Larsen-Borgnakke
+#----------------------------------------------------------
+VibColl = 1
+
+#----------------------------------------------------------
+# Number of replenishing pairs
+#----------------------------------------------------------
+NRepl = 1
+
+#----------------------------------------------------------
+# Desired noise in eq. distribution function if FMC was 
+# used (applicable to iColl = 2, 3)
+#      | A-A  A-B  A-C |
+#      | B-A  B-B  B-C |
+#      | C-A  C-B  C-C |
+#----------------------------------------------------------
+ColnRMS = '0.001d0 0.001d0
+           0.001d0 0.001d0'
+
+#---------------------------------------------------------
+# Method for calculating the rot relaxation rate
+#        0 = constant rate
+#	 1 = Parker
+#----------------------------------------------------------
+Z_rot_method = 0
+
+#---------------------------------------------------------
+# Method for calculating the vib relaxation rate
+#        0 = constant rate
+#	 1 = Millikan/White - Kyle
+#	 2 = Millikan/White - Bird
+#----------------------------------------------------------
+Z_vib_method = 0
+
+#==========================================================
+#          Convection Information
+#==========================================================
+[convection]
+
+#----------------------------------------------------------
+# Convection method
+#        0 = No convection
+#        1 = 1st order upwind convection
+#        4 = 4th order central convection
+#----------------------------------------------------------
+iConv = 1
+
+#==========================================================
+#          Screen Output Information
+#==========================================================
+[screen_out]
+
+#----------------------------------------------------------
+# Information written to screen
+#        0 = no screen output
+#	 1 = just headers
+#	 2 = properties
+#----------------------------------------------------------
+verbosity = 2
+
+#----------------------------------------------------------
+# Frequency information is written to screen
+#----------------------------------------------------------
+display_freq = 50
+
+#----------------------------------------------------------
+# Spatial location of screen output (default = nspace)
+#----------------------------------------------------------
+screen_output_loc = '1 1'
+
+#==========================================================
+#          Visualization Information
+#==========================================================
+[vis]
+
+#----------------------------------------------------------
+# All output is in tecplot format. Post-processing is 
+#     required for visualization in other formats
+#----------------------------------------------------------
+
+enable_vel_df_vis     = 1
+enable_rot_df_vis     = 0
+enable_vib_df_vis     = 0
+enable_rot_levels_vis = 0
+enable_vib_levels_vis = 0
+enable_properties_vis = 1
+enable_collisions_vis = 0
+enable_speed_vis      = 0
+enable_speed_rot_vis  = 0
+enable_speed_vib_vis  = 0
+enable_bkw_analytic_vis = 0
+
+df_vis_filename         = dist_func
+rot_levels_vis_filename = rot_levels
+vib_levels_vis_filename = vib_levels
+properties_vis_filename = macro_properties
+collisions_vis_filename = collisions
+speed_vis_filename      = speed_df
+
+df_vis_dump_freq         = 500
+rot_levels_vis_dump_freq = 1
+vib_levels_vis_dump_freq = 1
+properties_vis_dump_freq = 50
+collisions_vis_dump_freq = 1
+speed_vis_dump_freq      = 1
+
+wall_heat_flux_dump_freq = 25
+
+#----------------------------------------------------------
+# Number of locations and locations to print df and levels
+#----------------------------------------------------------
+num_output_locations = 1
+x_output_locations = '10'
+y_output_locations = '10'
+
+#----------------------------------------------------------
+# Number of dimensions to output for dist function
+# 	 1 = x(:), y=0,  z=0
+#	 2 = x(:), y(:), z=0
+#	 3 = x(:), y(:), z(:)
+#----------------------------------------------------------
+df_output_dimension = 2
+
+#----------------------------------------------------------
+# write_<prop>: 0 = Do not output 'Prop'
+#               1 = Output Prop 
+#----------------------------------------------------------
+write_dens  = 1
+
+write_x_vel = 1
+write_y_vel = 1
+write_z_vel = 0
+write_speed = 0
+write_mach  = 0
+
+write_tr_temp  = 1
+write_rot_temp = 0
+write_vib_temp = 0
+write_tot_temp = 0
+write_temp_x   = 0
+write_temp_y   = 0
+write_temp_z   = 0
+
+write_pressure = 1
+
+write_rot_dof = 0
+write_vib_dof = 0
+
+write_tr_energy  = 0
+write_rot_energy = 0
+write_vib_energy = 0
+write_tot_energy = 0
+
+write_entropy      = 0
+write_heat_flux_x  = 1
+write_heat_flux_y  = 1
+write_heat_flux_z  = 0
+
+# For analytic relaxation
+write_kin_temp_relax = 0
+write_rot_temp_relax = 0
+write_vib_temp_relax = 0
+
+#----------------------------------------------------------
+# write_stress      - number of stress directions to write
+# stress_directions - stress directions to write
+#----------------------------------------------------------
+write_stress = 0
+stress_directions = '11 22 33'
+
+#----------------------------------------------------------
+# write_moment   - number of moments to write
+# moment_numbers - moments to write
+#----------------------------------------------------------
+write_moment = 0
+moment_numbers = '4 6 8'
+
+#==========================================================
+#             Restart File Info
+#==========================================================
+[restart]
+
+#----------------------------------------------------------
+# read_rst
+#	1 - activate read restart at beginning of run
+# write_rst
+#	1 - activate write restart every write_freq time
+#	    steps
+# write_freq - frequency for restart write
+# 	     - if 0, and WriteRst=1, only write at end
+#----------------------------------------------------------
+read_rst  = 0
+write_rst = 0
+
+write_freq = 0
+
+read_restart_filename  = restart.rst
+write_restart_filename = restart.rst
+
+
+#==========================================================
+#           Random Number Generation
+#==========================================================
+[rng]
+
+#----------------------------------------------------------
+# Method for random number generation
+#        0 = gfortran's intrinsic rng
+#        1 = SID fast Mersenne Twister
+#	 2 = gsl mt1997
+#----------------------------------------------------------
+rand_method = 2
+
+#----------------------------------------------------------
+# Seed (if necessary)
+#----------------------------------------------------------
+seed = 0
